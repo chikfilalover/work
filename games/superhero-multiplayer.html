@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Superhero Multiplayer Game</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body { display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background-color: #f0f0f0; }
+        canvas { border: 1px solid black; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const socket = io('http://localhost:3000');
+
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let players = {};
+
+        socket.on('currentPlayers', (currentPlayers) => {
+            players = currentPlayers;
+        });
+
+        socket.on('newPlayer', (playerId) => {
+            players[playerId] = { x: Math.random() * canvas.width, y: Math.random() * canvas.height };
+        });
+
+        socket.on('disconnectPlayer', (playerId) => {
+            delete players[playerId];
+        });
+
+        socket.on('playerUpdates', (playerData) => {
+            players[playerData.id].x = playerData.x;
+            players[playerData.id].y = playerData.y;
+        });
+
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (const playerId in players) {
+                const player = players[playerId];
+                ctx.fillStyle = 'blue';
+                ctx.fillRect(player.x, player.y, 50, 50);
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        gameLoop();
+    </script>
+</body>
+</html>
